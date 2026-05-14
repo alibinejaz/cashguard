@@ -1,4 +1,21 @@
 import prisma from "../config/db.js";
+import { getActivePlanPressure } from "../utils/planUtils.js";
+
+const getActivePlansSafely = async (userId) => {
+  if (!prisma?.savingPlan?.findMany) return [];
+  try {
+    return await prisma.savingPlan.findMany({
+      where: {
+        userId,
+        status: "active",
+      },
+    });
+  } catch (err) {
+    // If migration is not applied yet, avoid breaking dashboard.
+    if (err?.code === "P2021") return [];
+    throw err;
+  }
+};
 
 const getMonthRange = (baseDate = new Date()) => {
   const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
@@ -144,6 +161,7 @@ export const getDashboard = async (req, res) => {
         },
       },
     });
+    const plans = await getActivePlansSafely(req.user.id);
 
     const salary = Number(profile?.salary || 0);
     const ignoredWarnings = Number(profile?.ignoredWarnings || 0);
@@ -156,8 +174,10 @@ export const getDashboard = async (req, res) => {
     const totalDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     const remainingDays = totalDays - daysPassed + 1;
 
-    const dailyBudget =
+    const normalDailyBudget =
       remainingDays > 0 ? Math.max(Math.floor(remaining / remainingDays), 0) : 0;
+    const planPressure = getActivePlanPressure(plans, today);
+    const dailyBudget = Math.max(normalDailyBudget - planPressure, 0);
 
     const projected =
       daysPassed > 0 ? Math.round((totalSpent / daysPassed) * totalDays) : 0;
@@ -183,11 +203,19 @@ export const getDashboard = async (req, res) => {
       dailyBudget,
     });
 
+    const dailyBudgetMessage =
+      planPressure > 0
+        ? `You can safely spend Rs. ${dailyBudget.toLocaleString()} today after protecting Rs. ${planPressure.toLocaleString()} for your active plans.`
+        : `You can safely spend around Rs. ${dailyBudget.toLocaleString()} per day.`;
+
     res.json({
       salary,
       totalSpent,
       remaining,
+      normalDailyBudget,
+      planPressure,
       dailyBudget,
+      dailyBudgetMessage,
       projected,
       projectedOverspend,
       spentPercentage,

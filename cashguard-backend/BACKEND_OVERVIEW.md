@@ -97,6 +97,7 @@ Mounted route groups:
 - `/api/expenses`
 - `/api/budgets`
 - `/api/dashboard`
+- `/api/plans`
 - `/api/reports`
 - `/api/warnings`
 
@@ -270,6 +271,7 @@ Validation:
 - Deletes the current user's expenses.
 - Deletes the current user's budget limits.
 - Deletes the current user's warning logs.
+- Deletes the current user's saving plans.
 - Resets profile salary to `0`.
 - Resets ignored warnings to `0`.
 - Resets streak to `0`.
@@ -379,7 +381,10 @@ Response includes:
 - `salary`
 - `totalSpent`
 - `remaining`
+- `normalDailyBudget`
+- `planPressure`
 - `dailyBudget`
+- `dailyBudgetMessage`
 - `projected`
 - `projectedOverspend`
 - `spentPercentage`
@@ -408,6 +413,18 @@ Response includes:
 - `categorySummary`
 - `weeklyTrends`
 - `expenses`
+
+### Plans Routes
+
+File: `cashguard-backend/src/routes/planRoutes.js`
+
+Protected endpoints:
+
+- `GET /api/plans`: returns all user-owned saving plans with computed metrics.
+- `POST /api/plans`: creates a new saving plan.
+- `PUT /api/plans/:id`: updates a user-owned saving plan.
+- `DELETE /api/plans/:id`: deletes a user-owned saving plan.
+- `POST /api/plans/:id/add-saving`: adds saved amount to a user-owned plan.
 
 ### Warning Routes
 
@@ -440,6 +457,7 @@ Relations:
 - Many `Expense` records.
 - Many `BudgetLimit` records.
 - Many `WarningLog` records.
+- Many `SavingPlan` records.
 
 ### FinanceProfile
 
@@ -504,6 +522,23 @@ Fields:
 - `category`: expense category involved.
 - `createdAt`
 
+### SavingPlan
+
+Stores user future-goal plans that influence safe daily spending.
+
+Fields:
+
+- `id`: UUID primary key.
+- `userId`: owner.
+- `name`: plan name (e.g., Dubai Trip 2027).
+- `targetAmount`: target amount to reach.
+- `savedAmount`: current saved amount.
+- `deadline`: plan deadline date.
+- `description`: optional user note.
+- `status`: plan status (`active`, `paused`, `completed`).
+- `createdAt`
+- `updatedAt`
+
 ## Business Logic
 
 ### Dashboard Metrics
@@ -516,6 +551,9 @@ Calculations:
 - `remaining`: salary minus total spent.
 - `remainingDays`: days left in current month including today.
 - `dailyBudget`: remaining divided by remaining days, floored and clamped to at least `0`.
+- `normalDailyBudget`: base daily budget before plan protection.
+- `planPressure`: sum of required daily saving across active plans.
+- `dailyBudget`: real spend-safe budget after subtracting plan pressure.
 - `projected`: current spending pace projected across the full month.
 - `projectedOverspend`: projected spending minus salary.
 - `spentPercentage`: total spent as percent of salary, capped at `100`.
@@ -557,7 +595,13 @@ Priority 1: category budget crossing
 
 Priority 2: daily safe budget crossing
 
-- Calculates safe daily budget from post-expense monthly remaining amount.
+- Calculates safe daily budget from monthly remaining amount and subtracts active plan pressure.
+- Warns when an expense pushes spending beyond this plan-protected daily budget.
+
+Priority 3: active plan damage risk
+
+- Detects if expense threatens required saving pace for active plans.
+- Adds warning message including plan names when possible.
 - Calculates today's spending total after adding this expense.
 - Warns if today's spending after this expense is greater than the safe daily budget.
 

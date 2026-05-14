@@ -9,6 +9,7 @@ import budgetRoutes from "./routes/budgetRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import reportsRoutes from "./routes/reportsRoutes.js";
 import warningRoutes from "./routes/warningRoutes.js";
+import planRoutes from "./routes/planRoutes.js";
 
 
 dotenv.config();
@@ -43,6 +44,7 @@ app.use("/api/budgets", budgetRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/warnings", warningRoutes);
+app.use("/api/plans", planRoutes);
 
 
 const PORT = process.env.PORT || 5050;

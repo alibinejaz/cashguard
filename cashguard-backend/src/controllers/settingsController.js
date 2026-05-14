@@ -55,6 +55,10 @@ export const resetFinanceData = async (req, res) => {
   where: { userId: req.user.id },
 });
 
+    await prisma.savingPlan.deleteMany({
+      where: { userId: req.user.id },
+    });
+
     const profile = await prisma.financeProfile.update({
       where: { userId: req.user.id },
       data: {

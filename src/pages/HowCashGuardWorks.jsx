@@ -9,28 +9,49 @@ const blocks = [
       "This tells you how much money is left for the current month after all logged expenses.",
   },
   {
-    title: "2) Safe Daily Budget",
-    formula: "Daily Budget = Remaining / Remaining Days",
+    title: "2) Safe Daily Budget (Before Plans)",
+    formula: "Normal Daily Budget = Remaining / Remaining Days",
     explain:
       "CashGuard spreads your remaining money over the days left in the month, so you get a safe amount for one day.",
   },
   {
-    title: "3) Month-End Projection",
+    title: "3) Plans Pressure (Future Goals)",
+    formula:
+      "Plan Pressure = Sum of required daily saving for all active plans",
+    explain:
+      "Each active plan (like Dubai Trip, Emergency Fund, or Education Fee) reserves a daily amount so your future goals stay on track.",
+  },
+  {
+    title: "4) Real Safe Daily Spend",
+    formula: "Real Daily Budget = Normal Daily Budget - Plan Pressure",
+    explain:
+      "This is the real amount you can safely spend today after protecting your plans.",
+  },
+  {
+    title: "5) Month-End Projection",
     formula: "Projected Spend = (Spent So Far / Days Passed) x Total Days",
     explain:
       "This estimates where your spending will end if you continue at the same pace.",
   },
   {
-    title: "4) Spending Percentage",
+    title: "6) Spending Percentage",
     formula: "Spent % = (Total Spent / Salary) x 100",
     explain:
       "This shows how much of your salary has already been used as a percentage.",
   },
   {
-    title: "5) When Warnings Appear",
-    formula: "Warning if you cross daily budget, category limit, or dangerous projection",
+    title: "7) When Warnings Appear",
+    formula:
+      "Warning if you cross real daily budget, category limit, dangerous projection, or harm active plans",
     explain:
-      "Warnings are there to stop risky spending before your month gets out of control. If more than one risk is hit, CashGuard shows all of them together.",
+      "Warnings stop risky spending before damage happens. If one expense harms your active plans and daily safety together, CashGuard shows all risks in one confirmation modal.",
+  },
+  {
+    title: "8) Plan Track Calculations",
+    formula:
+      "Required Daily = Remaining Plan Amount / Days Left, Required Monthly = Remaining Plan Amount / Months Left",
+    explain:
+      "For each plan, CashGuard calculates the exact saving pace needed to hit the deadline.",
   },
 ];
 

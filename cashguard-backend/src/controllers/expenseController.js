@@ -1,4 +1,21 @@
 import prisma from "../config/db.js";
+import { getActivePlanPressure, getPlanComputedMetrics } from "../utils/planUtils.js";
+
+const getActivePlansSafely = async (userId) => {
+  if (!prisma?.savingPlan?.findMany) return [];
+  try {
+    return await prisma.savingPlan.findMany({
+      where: {
+        userId,
+        status: "active",
+      },
+    });
+  } catch (err) {
+    // If plans migration is pending, keep expense flow working.
+    if (err?.code === "P2021") return [];
+    throw err;
+  }
+};
 
 export const getExpenses = async (req, res) => {
   try {
@@ -34,6 +51,7 @@ export const addExpense = async (req, res) => {
     const expenses = await prisma.expense.findMany({
       where: { userId: req.user.id },
     });
+    const activePlans = await getActivePlansSafely(req.user.id);
 
     const budgetLimit = await prisma.budgetLimit.findUnique({
       where: {
@@ -68,16 +86,29 @@ export const addExpense = async (req, res) => {
     const remainingDays = totalDays - daysPassed + 1;
     const remainingBefore =
       profile.salary - expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-    const safeDailyBudgetBefore =
+    const normalSafeDailyBudgetBefore =
       remainingDays > 0
         ? Math.max(Math.floor(remainingBefore / remainingDays), 0)
         : 0;
+    const planPressure = getActivePlanPressure(activePlans, today);
+    const safeDailyBudgetBefore = Math.max(
+      normalSafeDailyBudgetBefore - planPressure,
+      0
+    );
 
     const todaySpentBefore = expenses
       .filter((e) => new Date(e.date).toDateString() === today.toDateString())
       .reduce((sum, e) => sum + Number(e.amount), 0);
     const todaySpentAfter = todaySpentBefore + Number(amount);
     const willCrossDailyBudget = todaySpentAfter > safeDailyBudgetBefore;
+    const affectedPlans =
+      planPressure > 0 && willCrossDailyBudget
+        ? activePlans
+            .map((plan) => getPlanComputedMetrics(plan, today))
+            .filter((plan) => plan.requiredDailySaving > 0)
+            .sort((a, b) => b.requiredDailySaving - a.requiredDailySaving)
+        : [];
+    const willDamagePlans = affectedPlans.length > 0;
 
     let warning = null;
     const reasonParts = [];
@@ -93,13 +124,27 @@ export const addExpense = async (req, res) => {
     if (willCrossDailyBudget) {
       reasonParts.push("Daily safe budget will be crossed");
       messageParts.push(
-        `Today's spending becomes Rs. ${todaySpentAfter.toLocaleString()} while your current safe daily budget is Rs. ${safeDailyBudgetBefore.toLocaleString()}.`
+        `Today's spending becomes Rs. ${todaySpentAfter.toLocaleString()} while your current safe daily budget is Rs. ${safeDailyBudgetBefore.toLocaleString()} after protecting Rs. ${planPressure.toLocaleString()} for active plans.`
+      );
+    }
+
+    if (willDamagePlans) {
+      const planNames = affectedPlans.slice(0, 2).map((p) => p.name).join(" and ");
+      reasonParts.push("Active savings plan may fall behind");
+      messageParts.push(
+        `This expense may push your ${planNames} plan${affectedPlans.length > 1 ? "s" : ""} behind schedule.`
       );
     }
 
     if (reasonParts.length > 0) {
       warning = {
-        type: reasonParts.length > 1 ? "category_daily_budget" : willCrossCategoryLimit ? "category" : "daily_budget",
+        type: reasonParts.length > 1
+          ? "multi_risk"
+          : willCrossCategoryLimit
+          ? "category"
+          : willDamagePlans
+          ? "plan"
+          : "daily_budget",
         reason: `${reasonParts.join(" + ")}.`,
         message: messageParts.join(" "),
       };

@@ -71,6 +71,7 @@ Routes are defined in `src/App.jsx`.
 - `/`: protected dashboard inside `AppLayout`.
 - `/expenses`: protected expense logging and recent expenses.
 - `/budget`: protected category budget limit management.
+- `/plans`: protected saving plans management linked to daily spending control.
 - `/reports`: protected reporting and charts.
 - `/settings`: protected salary, stats, and reset controls.
 - `/how-cashguard-works`: protected plain-language explanation page for app calculations and warnings.
@@ -109,7 +110,7 @@ Protected pages are wrapped by `ProtectedRoute`, which checks for a persisted au
 `Sidebar`
 
 - Displays CashGuard branding and route links.
-- Links to Dashboard, Expenses, Budget Plan, Reports, and Settings.
+- Links to Dashboard, Expenses, Budget Plan, Plans, Reports, How It Works, and Settings.
 - Includes logout, which clears auth state and navigates to `/login`.
 - Uses icon-based nav items.
 - Includes a mobile drawer with backdrop and close button for phone navigation.
@@ -233,6 +234,20 @@ What it does:
 - Lists all expense records in a table.
 - Includes month selector and download dropdown for month-specific `CSV` and `PDF`.
 
+### Plans
+
+File: `src/pages/Plans.jsx`
+
+What it does:
+
+- Fetches user plans from `GET /api/plans`.
+- Creates plans through `POST /api/plans`.
+- Updates plans through `PUT /api/plans/:id`.
+- Deletes plans through `DELETE /api/plans/:id`.
+- Adds saving to a plan through `POST /api/plans/:id/add-saving`.
+- Shows per-plan target, saved, remaining, deadline, progress percent, required daily saving, and required monthly saving.
+- Shows total active plan pressure, which is the daily amount reserved for future goals.
+
 Chart:
 
 - `src/components/charts/SpendingBreakdownChart.jsx` builds category totals from expenses and renders a Recharts donut chart with a matching legend.
@@ -250,7 +265,7 @@ What it does:
 
 Reset behavior:
 
-- Backend deletes expenses, budget limits, and warning logs.
+- Backend deletes expenses, budget limits, warning logs, and saving plans.
 - Backend resets salary, ignored warnings, streak, and last checked date.
 
 ## Backend API
@@ -294,7 +309,15 @@ Budgets:
 
 Dashboard:
 
-- `GET /api/dashboard`: returns calculated salary, spending, projection, health, behavior, streak, and suggestions.
+- `GET /api/dashboard`: returns calculated salary, spending, projection, health, behavior, streak, suggestions, and plan-adjusted daily budget fields (`normalDailyBudget`, `planPressure`, `dailyBudgetMessage`).
+
+Plans:
+
+- `GET /api/plans`: returns user plans with computed plan metrics.
+- `POST /api/plans`: creates a new saving plan.
+- `PUT /api/plans/:id`: updates a user-owned plan.
+- `DELETE /api/plans/:id`: deletes a user-owned plan.
+- `POST /api/plans/:id/add-saving`: increments saved amount for a user-owned plan.
 
 Reports:
 
@@ -312,7 +335,7 @@ Defined in `cashguard-backend/prisma/schema.prisma`.
 
 - `id`, `name`, `email`, `password`, `createdAt`
 - Has one `FinanceProfile`
-- Has many `Expense`, `BudgetLimit`, and `WarningLog`
+- Has many `Expense`, `BudgetLimit`, `WarningLog`, and `SavingPlan`
 
 `FinanceProfile`
 
@@ -337,13 +360,21 @@ Defined in `cashguard-backend/prisma/schema.prisma`.
 - Stores warning type, reason, message, amount, category, and createdAt
 - Created when a user confirms an unsafe expense
 
+`SavingPlan`
+
+- Belongs to one user
+- Stores plan name, target amount, saved amount, deadline, optional description, status, and timestamps
+- Drives required daily/monthly saving metrics and plan pressure
+
 ## Key Backend Logic
 
 Dashboard calculations:
 
 - Total spent is the sum of all user expenses.
 - Remaining is salary minus total spent.
-- Daily budget is remaining divided by remaining days in the current month, floored and never below 0.
+- Normal daily budget is remaining divided by remaining days in the current month, floored and never below 0.
+- Plan pressure is total required daily saving for active plans.
+- Real daily budget is normal daily budget minus plan pressure, floored at 0.
 - Projection estimates month-end spending from spending so far this month.
 - Health status can be empty, safe, warning, or danger.
 - Behavior message depends on ignored warning count.
@@ -354,6 +385,8 @@ Expense warning logic:
 - Salary must be set before adding expenses.
 - Category limit warnings are checked first.
 - A warning is returned if the new expense would cross the category limit.
+- A warning is returned if the expense crosses real daily budget after protecting active plans.
+- A warning is returned if the expense risks putting active plans behind schedule.
 - A projection warning is returned if the expense makes projected monthly spending exceed salary and the expense is more than 30 percent of salary.
 - If a warning exists and `confirm` is false, backend returns HTTP `409`.
 - If a warning exists and `confirm` is true, backend increments ignored warnings and writes a `WarningLog`.

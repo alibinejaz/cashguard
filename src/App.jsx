@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import Settings from "./pages/Settings";
 import Budget from "./pages/Budget";
+import Plans from "./pages/Plans";
 import Reports from "./pages/Reports";
 import HowCashGuardWorks from "./pages/HowCashGuardWorks";
 
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="expenses" element={<Expenses />} />
           <Route path="settings" element={<Settings />} />
           <Route path="budget" element={<Budget />} />
+          <Route path="plans" element={<Plans />} />
           <Route path="reports" element={<Reports />} />
           <Route path="how-cashguard-works" element={<HowCashGuardWorks />} />
         </Route>

@@ -109,6 +109,7 @@ export default function Dashboard() {
     projectedOverspend,
     spentPercentage,
     health,
+    dailyBudgetMessage,
     ignoredWarnings,
     behavior,
     streak,
@@ -216,7 +217,7 @@ export default function Dashboard() {
               Rs. {dailyBudget.toLocaleString()}
             </h2>
             <p className="mt-3 text-sm leading-6 text-white/70">
-              This is today’s limit. Cross it and your month gets weaker.
+              {dailyBudgetMessage || "This is today’s limit. Cross it and your month gets weaker."}
             </p>
           </div>
         </div>

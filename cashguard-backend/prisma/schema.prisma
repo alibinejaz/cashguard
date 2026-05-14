@@ -18,6 +18,7 @@ model User {
   expenses Expense[]
   budgets  BudgetLimit[]
   warnings WarningLog[]
+  plans    SavingPlan[]
 }
 
 model FinanceProfile {
@@ -67,6 +68,21 @@ model WarningLog {
   amount    Float
   category  String
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SavingPlan {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  targetAmount Float
+  savedAmount  Float    @default(0)
+  deadline     DateTime
+  description  String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
