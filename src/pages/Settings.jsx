@@ -8,6 +8,10 @@ import {
   useSettingsQuery,
   useUpdateSalaryMutation,
 } from "../hooks/useSettings";
+import PageHeader from "../components/common/PageHeader";
+import SurfaceCard from "../components/common/SurfaceCard";
+import MetricCard from "../components/common/MetricCard";
+import ConfirmModal from "../components/ui/ConfirmModal";
 
 export default function Settings() {
   const token = useAuthStore((s) => s.token);
@@ -15,6 +19,7 @@ export default function Settings() {
 
   const [salaryDraft, setSalaryDraft] = useState("");
   const [isSalaryDirty, setIsSalaryDirty] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const {
     data: settingsData,
     isLoading: settingsLoading,
@@ -77,16 +82,13 @@ export default function Settings() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="border-b border-slate-200 pb-6">
-        <p className="text-sm font-semibold text-emerald-600">CashGuard</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Manage your money system. Don’t reset unless you mean it.
-        </p>
-      </div>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Settings"
+        subtitle="Manage your money system. Don’t reset unless you mean it."
+      />
 
-      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <SurfaceCard className="mt-6">
         <h2 className="text-lg font-bold">Salary Settings</h2>
         <p className="mt-1 text-sm text-slate-500">
           Your salary controls all budget calculations.
@@ -100,7 +102,7 @@ export default function Settings() {
             setSalaryDraft(e.target.value);
           }}
           placeholder="Enter salary"
-          className="mt-5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-semibold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+          className="input mt-5 px-5 py-4 text-lg font-semibold"
         />
 
         <button
@@ -110,15 +112,15 @@ export default function Settings() {
         >
           {saving ? "Saving..." : "Save Salary"}
         </button>
-      </section>
+      </SurfaceCard>
 
       <section className="mt-6 grid gap-5 md:grid-cols-3">
-        <StatusCard label="Expenses Logged" value={stats.expensesCount} />
-        <StatusCard label="Budget Limits" value={stats.budgetCount} />
-        <StatusCard label="Storage" value="Cloud (Backend)" />
+        <MetricCard title="Expenses Logged" value={stats.expensesCount} />
+        <MetricCard title="Budget Limits" value={stats.budgetCount} />
+        <MetricCard title="Storage" value="Cloud (Backend)" />
       </section>
 
-      <section className="mt-6 rounded-3xl border border-red-100 bg-red-50 p-6 shadow-sm">
+      <section className="mt-6 rounded-3xl border border-red-100 bg-red-50 p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-bold text-red-700">Danger Zone</h2>
         <p className="mt-2 text-sm leading-6 text-red-600">
           This will remove your salary, expenses, and budget limits from
@@ -126,21 +128,27 @@ export default function Settings() {
         </p>
 
         <button
-          onClick={handleReset}
+          onClick={() => setShowResetConfirm(true)}
           className="mt-5 rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white hover:bg-red-700"
         >
           Reset All Data
         </button>
       </section>
-    </div>
-  );
-}
 
-function StatusCard({ label, value }) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <h2 className="mt-3 text-2xl font-black text-slate-950">{value}</h2>
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        title="Reset All Data"
+        subtitle="This action is permanent"
+        message="This will remove your salary, expenses, budget limits, and warning history. This cannot be undone."
+        tone="danger"
+        confirmLabel="Yes, Reset Data"
+        cancelLabel="Keep My Data"
+        onCancel={() => setShowResetConfirm(false)}
+        onConfirm={async () => {
+          setShowResetConfirm(false);
+          await handleReset();
+        }}
+      />
     </div>
   );
 }

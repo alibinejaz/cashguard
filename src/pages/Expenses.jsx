@@ -4,11 +4,15 @@ import { Plus, Trash2, ReceiptText } from "lucide-react";
 import useAuthStore from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import ConfirmModal from "../components/ui/ConfirmModal";
+import FormField from "../components/common/FormField";
+import PageHeader from "../components/common/PageHeader";
+import SurfaceCard from "../components/common/SurfaceCard";
 import {
   useAddExpenseMutation,
   useDeleteExpenseMutation,
   useExpensesQuery,
 } from "../hooks/useExpenses";
+import { useSettingsQuery } from "../hooks/useSettings";
 
 const categories = [
   "Food",
@@ -33,9 +37,11 @@ export default function Expenses() {
     isError,
     error,
   } = useExpensesQuery(token);
+  const { data: settingsData, isLoading: settingsLoading } = useSettingsQuery(token);
   const addExpenseMutation = useAddExpenseMutation(token);
   const deleteExpenseMutation = useDeleteExpenseMutation(token);
   const saving = addExpenseMutation.isPending;
+  const hasValidSalary = Number(settingsData?.salary || 0) > 0;
 
   useEffect(() => {
     if (isError && error) {
@@ -93,6 +99,10 @@ export default function Expenses() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!hasValidSalary) {
+      showToast("Set and save salary first to add expenses", "error");
+      return;
+    }
 
     if (!form.amount || Number(form.amount) <= 0) {
       showToast("Enter a valid amount", "error");
@@ -137,21 +147,14 @@ export default function Expenses() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-center">
-        <div>
-          <p className="text-sm font-semibold text-emerald-600">CashGuard</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Expenses</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Add every rupee you spend. Guessing is how budgets die.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Expenses"
+        subtitle="Add every rupee you spend. Guessing is how budgets die."
+      />
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[420px_1fr]">
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
+      <section className="mt-6 grid gap-6 xl:grid-cols-[400px_1fr]">
+        <SurfaceCard>
+        <form onSubmit={handleSubmit}>
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
               <ReceiptText />
@@ -163,22 +166,30 @@ export default function Expenses() {
           </div>
 
           <div className="space-y-4">
-            <Field label="Amount">
+            {!settingsLoading && !hasValidSalary && (
+              <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700">
+                Salary is required before adding expenses. Please set it in Settings and save it.
+              </div>
+            )}
+
+            <FormField label="Amount">
               <input
                 type="number"
                 placeholder="e.g. 1200"
                 className="input"
                 value={form.amount}
+                disabled={!hasValidSalary}
                 onChange={(e) =>
                   setForm({ ...form, amount: e.target.value })
                 }
               />
-            </Field>
+            </FormField>
 
-            <Field label="Category">
+            <FormField label="Category">
               <select
                 className="input"
                 value={form.category}
+                disabled={!hasValidSalary}
                 onChange={(e) =>
                   setForm({ ...form, category: e.target.value })
                 }
@@ -187,38 +198,41 @@ export default function Expenses() {
                   <option key={cat}>{cat}</option>
                 ))}
               </select>
-            </Field>
+            </FormField>
 
-            <Field label="Note">
+            <FormField label="Note">
               <input
                 type="text"
                 placeholder="e.g. lunch, fuel, medicine"
                 className="input"
                 value={form.note}
+                disabled={!hasValidSalary}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
               />
-            </Field>
+            </FormField>
 
-            <Field label="Date">
+            <FormField label="Date">
               <input
                 type="date"
                 className="input"
                 value={form.date}
+                disabled={!hasValidSalary}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
               />
-            </Field>
+            </FormField>
 
             <button
-              disabled={saving}
+              disabled={saving || !hasValidSalary}
               className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Plus size={18} />
-              {saving ? "Adding..." : "Add Expense"}
+              {saving ? "Adding..." : !hasValidSalary ? "Set Salary First" : "Add Expense"}
             </button>
           </div>
         </form>
+        </SurfaceCard>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <SurfaceCard>
           <h2 className="text-lg font-bold">Recent Expenses</h2>
           <p className="mt-1 text-sm text-slate-500">
             Your latest spending records.
@@ -226,24 +240,24 @@ export default function Expenses() {
 
           <div className="mt-6 space-y-3">
             {loading ? (
-              <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-sm font-bold text-slate-400">
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/75 text-sm font-bold text-slate-400">
                 Loading expenses...
               </div>
             ) : expenses.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-400">
+              <div className="flex h-120 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/75 text-sm text-slate-400">
                 No expenses added yet
               </div>
             ) : (
               expenses.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
+                  className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 px-3 py-3 sm:px-4 sm:py-4"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold text-slate-900">
                       Rs. {Number(item.amount).toLocaleString()}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 break-words text-sm text-slate-500">
                       {item.category} • {item.note} •{" "}
                       {new Date(item.date).toLocaleDateString()}
                     </p>
@@ -251,7 +265,7 @@ export default function Expenses() {
 
                   <button
                     onClick={() => handleDelete(item.id)}
-                    className="rounded-xl p-2 text-red-500 hover:bg-red-50"
+                    className="shrink-0 rounded-xl p-2 text-red-500 hover:bg-red-50"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -259,7 +273,7 @@ export default function Expenses() {
               ))
             )}
           </div>
-        </div>
+        </SurfaceCard>
       </section>
 
       <ConfirmModal
@@ -274,16 +288,5 @@ export default function Expenses() {
         onConfirm={handleConfirmExpense}
       />
     </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-      </span>
-      {children}
-    </label>
   );
 }

@@ -65,18 +65,19 @@ export const addExpense = async (req, res) => {
     const projected = Math.round((totalSpentAfter / daysPassed) * totalDays);
     const overspend = projected - profile.salary;
 
-    const remainingAfter = profile.salary - totalSpentAfter;
     const remainingDays = totalDays - daysPassed + 1;
-    const safeDailyBudgetAfter =
+    const remainingBefore =
+      profile.salary - expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+    const safeDailyBudgetBefore =
       remainingDays > 0
-        ? Math.max(Math.floor(remainingAfter / remainingDays), 0)
+        ? Math.max(Math.floor(remainingBefore / remainingDays), 0)
         : 0;
 
     const todaySpentBefore = expenses
       .filter((e) => new Date(e.date).toDateString() === today.toDateString())
       .reduce((sum, e) => sum + Number(e.amount), 0);
     const todaySpentAfter = todaySpentBefore + Number(amount);
-    const willCrossDailyBudget = todaySpentAfter > safeDailyBudgetAfter;
+    const willCrossDailyBudget = todaySpentAfter > safeDailyBudgetBefore;
 
     let warning = null;
     const reasonParts = [];
@@ -92,7 +93,7 @@ export const addExpense = async (req, res) => {
     if (willCrossDailyBudget) {
       reasonParts.push("Daily safe budget will be crossed");
       messageParts.push(
-        `Today's spending becomes Rs. ${todaySpentAfter.toLocaleString()} while your safe daily budget is Rs. ${safeDailyBudgetAfter.toLocaleString()}.`
+        `Today's spending becomes Rs. ${todaySpentAfter.toLocaleString()} while your current safe daily budget is Rs. ${safeDailyBudgetBefore.toLocaleString()}.`
       );
     }
 

@@ -5,6 +5,7 @@ import Expenses from "./pages/Expenses";
 import Settings from "./pages/Settings";
 import Budget from "./pages/Budget";
 import Reports from "./pages/Reports";
+import HowCashGuardWorks from "./pages/HowCashGuardWorks";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="budget" element={<Budget />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="how-cashguard-works" element={<HowCashGuardWorks />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

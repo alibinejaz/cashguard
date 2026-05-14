@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import { useSignupMutation } from "../hooks/useAuthApi";
@@ -50,12 +49,8 @@ const handleSubmit = async (e) => {
 };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl"
-      >
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4">
+      <div className="w-full max-w-md rounded-3xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur">
         <div className="mb-8">
           <h1 className="text-3xl font-black text-slate-950">Create Account</h1>
           <p className="mt-2 text-sm text-slate-500">
@@ -73,7 +68,7 @@ const handleSubmit = async (e) => {
               value={form.name}
               onChange={handleChange}
               placeholder="Your name"
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-950"
+              className="input mt-2"
             />
           </div>
 
@@ -87,7 +82,7 @@ const handleSubmit = async (e) => {
               value={form.email}
               onChange={handleChange}
               placeholder="you@example.com"
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-950"
+              className="input mt-2"
             />
           </div>
 
@@ -101,7 +96,7 @@ const handleSubmit = async (e) => {
               value={form.password}
               onChange={handleChange}
               placeholder="Create password"
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-950"
+              className="input mt-2"
             />
           </div>
 
@@ -120,7 +115,7 @@ const handleSubmit = async (e) => {
             Login
           </Link>
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -11,8 +11,11 @@ import {
   Brain,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import SurfaceCard from "../components/common/SurfaceCard";
+import DashboardStatCard from "../components/dashboard/DashboardStatCard";
+import DashboardInsightCard from "../components/dashboard/DashboardInsightCard";
+import SuggestionChip from "../components/dashboard/SuggestionChip";
 
 import useAuthStore from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
@@ -82,7 +85,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
-        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-4 text-sm font-bold text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/90 px-6 py-4 text-sm font-bold text-slate-500 shadow-sm">
           Loading CashGuard...
         </div>
       </div>
@@ -120,10 +123,10 @@ export default function Dashboard() {
       : "bg-emerald-500";
 
   const heroTone = {
-    danger: "from-red-950 via-red-900 to-red-700",
-    warning: "from-orange-950 via-orange-900 to-orange-600",
-    safe: "from-slate-950 via-slate-900 to-emerald-800",
-    empty: "from-slate-950 via-slate-900 to-slate-700",
+    danger: "bg-red-600",
+    warning: "bg-amber-500",
+    safe: "bg-emerald-600",
+    empty: "bg-slate-700",
   };
 
   const behaviorTone =
@@ -132,19 +135,21 @@ export default function Dashboard() {
       : behavior?.tone === "warning"
       ? "bg-orange-50 text-orange-700 border-orange-100"
       : "bg-emerald-50 text-emerald-700 border-emerald-100";
+  const currentMonthLabel = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <motion.section
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`rounded-[2rem] bg-gradient-to-br ${
+    <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
+      <section
+        className={`rounded-[2rem] ${
           heroTone[health.status]
-        } p-6 text-white shadow-xl md:p-8`}
+        } p-4 text-white shadow-xl sm:p-6 md:p-8`}
       >
-        <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-center">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-center">
           <div>
-           <div className="flex items-center justify-between gap-4">
+           <div className="flex flex-wrap items-center justify-between gap-4">
   <div className="flex items-center gap-3">
     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-sm font-black text-white">
       {user?.name
@@ -165,7 +170,10 @@ export default function Dashboard() {
     </div>
   </div>
 
-  <div className="flex gap-2 text-xs font-semibold text-white/60">
+  <div className="flex flex-wrap gap-2 text-xs font-semibold text-white/60">
+    <span className="rounded-xl bg-white/10 px-3 py-1">
+      {currentMonthLabel}
+    </span>
     <span className="rounded-xl bg-white/10 px-3 py-1">
       {ignoredWarnings} warnings
     </span>
@@ -175,7 +183,7 @@ export default function Dashboard() {
   </div>
 </div>
 
-            <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">
+            <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-4xl md:text-5xl">
               {health.title}
             </h1>
 
@@ -183,10 +191,10 @@ export default function Dashboard() {
               {health.message}
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
               <Link
                 to="/expenses"
-                className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-slate-100"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-slate-100 sm:w-auto"
               >
                 <Plus size={18} />
                 Add Expense
@@ -194,7 +202,7 @@ export default function Dashboard() {
 
               <Link
                 to="/budget"
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10 sm:w-auto"
               >
                 <Target size={18} />
                 Plan Budget
@@ -202,9 +210,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
+          <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur sm:p-5">
             <p className="text-sm text-white/60">Safe to spend today</p>
-            <h2 className="mt-2 text-4xl font-black">
+            <h2 className="mt-2 text-3xl font-black sm:text-4xl">
               Rs. {dailyBudget.toLocaleString()}
             </h2>
             <p className="mt-3 text-sm leading-6 text-white/70">
@@ -212,17 +220,17 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
-      </motion.section>
-
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Salary" value={`Rs. ${salary.toLocaleString()}`} icon={<Wallet />} tone="emerald" />
-        <StatCard title="Spent" value={`Rs. ${totalSpent.toLocaleString()}`} icon={<TrendingDown />} tone="red" />
-        <StatCard title="Remaining" value={`Rs. ${remaining.toLocaleString()}`} icon={<PiggyBank />} tone="blue" />
-        <StatCard title="Daily Budget" value={`Rs. ${dailyBudget.toLocaleString()}`} icon={<CalendarDays />} tone="violet" />
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <section className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardStatCard title="Salary" value={`Rs. ${salary.toLocaleString()}`} icon={<Wallet />} tone="emerald" />
+        <DashboardStatCard title="Spent" value={`Rs. ${totalSpent.toLocaleString()}`} icon={<TrendingDown />} tone="red" />
+        <DashboardStatCard title="Remaining" value={`Rs. ${remaining.toLocaleString()}`} icon={<PiggyBank />} tone="blue" />
+        <DashboardStatCard title="Daily Budget" value={`Rs. ${dailyBudget.toLocaleString()}`} icon={<CalendarDays />} tone="violet" />
+      </section>
+
+      <section className="grid gap-4 sm:gap-5 lg:grid-cols-3">
+        <SurfaceCard className="lg:col-span-2">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
               <h2 className="text-lg font-bold">Monthly Usage</h2>
@@ -241,13 +249,13 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="mt-4 flex justify-between text-sm text-slate-500">
+          <div className="mt-4 flex flex-wrap justify-between gap-2 text-sm text-slate-500">
             <span>Spent: Rs. {totalSpent.toLocaleString()}</span>
             <span>Salary: Rs. {salary.toLocaleString()}</span>
           </div>
-        </Card>
+        </SurfaceCard>
 
-        <Card>
+        <SurfaceCard>
           <div className="flex items-center gap-3">
             <Wallet className="text-emerald-600" />
             <h2 className="text-lg font-bold">Salary</h2>
@@ -256,7 +264,7 @@ export default function Dashboard() {
           <input
             type="number"
             placeholder="e.g. 150000"
-            className="mt-5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-lg font-semibold outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+            className="input mt-5 px-5 py-4 text-lg font-semibold"
             value={salaryInput}
             onChange={(e) => {
               setIsSalaryDirty(true);
@@ -271,11 +279,11 @@ export default function Dashboard() {
           >
             {savingSalary ? "Saving..." : "Save Salary"}
           </button>
-        </Card>
+        </SurfaceCard>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-3">
-        <InsightCard
+      <section className="grid gap-4 sm:gap-5 lg:grid-cols-3">
+        <DashboardInsightCard
           icon={<Brain />}
           title="Projection"
           value={`Rs. ${projected.toLocaleString()}`}
@@ -289,8 +297,8 @@ export default function Dashboard() {
           danger={salary > 0 && projectedOverspend > 0}
         />
 
-       <button onClick={fetchWarnings} className="text-left">
-  <InsightCard
+       <button onClick={fetchWarnings} className="w-full text-left">
+  <DashboardInsightCard
     icon={behavior?.tone === "danger" ? <AlertTriangle /> : <ShieldCheck />}
     title="Behavior"
     value={`${ignoredWarnings} ignored`}
@@ -299,7 +307,7 @@ export default function Dashboard() {
   />
 </button>
 
-        <InsightCard
+        <DashboardInsightCard
           icon={<Trophy />}
           title="Streak"
           value={`${streak} day${streak !== 1 ? "s" : ""}`}
@@ -308,12 +316,13 @@ export default function Dashboard() {
               ? "Start again today. No drama, just discipline."
               : "You stayed within budget. Keep the chain alive."
           }
+          className={streak > 0 ? "border-emerald-100 bg-emerald-50 text-emerald-700" : ""}
         />
       </section>
 
       <section>
-        <Card>
-          <div className="flex items-center justify-between">
+        <SurfaceCard>
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <div>
               <h2 className="text-lg font-bold">What You Should Do Now</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -331,14 +340,14 @@ export default function Dashboard() {
 
           <div className="mt-6 grid gap-3 md:grid-cols-2">
             {suggestions.slice(0, 4).map((item) => (
-              <Suggestion key={item} text={item} />
+              <SuggestionChip key={item} text={item} />
             ))}
           </div>
-        </Card>
+        </SurfaceCard>
       </section>
       {showWarnings && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
-    <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+  <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 px-3 pb-3 pt-20 sm:items-center sm:p-4">
+    <div className="w-full max-w-2xl rounded-3xl bg-white p-4 shadow-2xl sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-slate-950">
@@ -357,7 +366,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      <div className="mt-6 max-h-[420px] space-y-3 overflow-y-auto">
+      <div className="mt-5 max-h-[65vh] space-y-3 overflow-y-auto">
         {warnings.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
             No ignored warnings yet.
@@ -387,7 +396,7 @@ export default function Dashboard() {
                 {item.message}
               </p>
 
-              <div className="mt-3 flex justify-between text-xs font-semibold text-red-500">
+              <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs font-semibold text-red-500">
                 <span>{item.category}</span>
                 <span>{new Date(item.createdAt).toLocaleString()}</span>
               </div>
@@ -398,78 +407,6 @@ export default function Dashboard() {
     </div>
   </div>
 )}
-    </div>
-  );
-}
-
-function Card({ children, className = "" }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function StatCard({ title, value, icon, tone }) {
-  const tones = {
-    emerald: "bg-emerald-50 text-emerald-600",
-    red: "bg-red-50 text-red-600",
-    blue: "bg-blue-50 text-blue-600",
-    violet: "bg-violet-50 text-violet-600",
-  };
-
-  return (
-    <Card>
-      <div className={`inline-flex rounded-2xl p-3 ${tones[tone]}`}>
-        {icon}
-      </div>
-
-      <p className="mt-5 text-sm font-medium text-slate-500">{title}</p>
-      <h3 className="mt-2 text-2xl font-black tracking-tight">{value}</h3>
-    </Card>
-  );
-}
-
-function InsightCard({ icon, title, value, message, danger = false, className = "" }) {
-  return (
-    <div
-      className={`rounded-3xl border p-6 shadow-sm ${
-        className ||
-        (danger
-          ? "border-red-100 bg-red-50 text-red-700"
-          : "border-slate-200 bg-white text-slate-950")
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl bg-white/60 p-3">{icon}</div>
-        <h2 className="text-lg font-bold">{title}</h2>
-      </div>
-
-      <h3 className="mt-5 text-2xl font-black">{value}</h3>
-      <p className="mt-3 text-sm font-semibold leading-6 opacity-80">
-        {message}
-      </p>
-    </div>
-  );
-}
-
-function Suggestion({ text }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium leading-6 text-slate-700">
-      {text}
-    </div>
-  );
-}
-
-function UserMiniCard({ label, value }) {
-  return (
-    <div className="rounded-2xl bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold text-slate-500">{label}</p>
-      <h3 className="mt-1 text-sm font-black text-slate-950">{value}</h3>
     </div>
   );
 }

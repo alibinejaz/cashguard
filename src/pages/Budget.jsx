@@ -3,6 +3,8 @@ import useAuthStore from "../store/useAuthStore";
 import { useToastStore } from "../store/useToastStore";
 import { useBudgetsQuery, useSetBudgetLimitMutation } from "../hooks/useBudgets";
 import { useExpensesQuery } from "../hooks/useExpenses";
+import PageHeader from "../components/common/PageHeader";
+import SurfaceCard from "../components/common/SurfaceCard";
 
 const categories = [
   "Food",
@@ -121,27 +123,19 @@ export default function Budget() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="border-b border-slate-200 pb-6">
-        <p className="text-sm font-semibold text-emerald-600">CashGuard</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">
-          Budget Plan
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Set category limits. Without limits, you are just watching yourself lose money.
-        </p>
-      </div>
+      <PageHeader
+        title="Budget Plan"
+        subtitle="Set category limits. Without limits, you are just watching yourself lose money."
+      />
 
       <section className="mt-6 grid gap-5">
         {categories.map((category) => {
           const data = getCategoryData(category);
 
           return (
-            <div
-              key={category}
-              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-            >
-              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                <div>
+            <SurfaceCard key={category}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_200px] md:items-start">
+                <div className="min-w-0">
                   <h2 className="text-lg font-bold">{category}</h2>
                   <p className="mt-1 text-sm text-slate-500">
                     Spent Rs. {data.spent.toLocaleString()}
@@ -161,7 +155,7 @@ export default function Budget() {
                   onChange={(e) =>
                     handleLimitChange(category, e.target.value)
                   }
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 md:w-48"
+                  className="input h-11 w-full md:justify-self-end"
                 />
               </div>
 
@@ -195,7 +189,7 @@ export default function Budget() {
                   {data.percentage}%
                 </span>
               </div>
-            </div>
+            </SurfaceCard>
           );
         })}
       </section>

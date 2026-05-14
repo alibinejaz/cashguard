@@ -41,6 +41,9 @@ Frontend source lives in `src/`.
 - `src/components/layout/`: shared app shell and sidebar.
 - `src/components/ui/`: shared modal/toast UI.
 - `src/components/charts/`: Recharts visualizations.
+- `src/components/common/`: reusable shared UI blocks (headers, cards, fields, empty states).
+- `src/components/dashboard/`: dashboard-specific reusable UI blocks.
+- `src/components/reports/`: reports-specific reusable UI blocks.
 - `src/store/`: Zustand stores.
 - `src/utils/`: older/local finance helper functions. Some logic has since moved to the backend.
 - `src/index.css`: Tailwind import plus shared `.input` utility.
@@ -70,6 +73,7 @@ Routes are defined in `src/App.jsx`.
 - `/budget`: protected category budget limit management.
 - `/reports`: protected reporting and charts.
 - `/settings`: protected salary, stats, and reset controls.
+- `/how-cashguard-works`: protected plain-language explanation page for app calculations and warnings.
 - `*`: redirects to `/`.
 
 Protected pages are wrapped by `ProtectedRoute`, which checks for a persisted auth token in `useAuthStore`. If there is no token, the user is sent to `/login`.
@@ -99,15 +103,16 @@ Protected pages are wrapped by `ProtectedRoute`, which checks for a persisted au
 `AppLayout`
 
 - Provides the logged-in shell.
-- Renders a desktop sidebar and a main content area.
-- Uses a light app background `#F6F8FB`.
+- Renders a desktop sidebar, plus a mobile top bar and toggleable drawer navigation.
+- Uses a light slate app background for readability across devices.
 
 `Sidebar`
 
 - Displays CashGuard branding and route links.
 - Links to Dashboard, Expenses, Budget Plan, Reports, and Settings.
 - Includes logout, which clears auth state and navigates to `/login`.
-- Current limitation: sidebar is hidden on smaller screens with `lg:block`; there is no mobile navigation yet.
+- Uses icon-based nav items.
+- Includes a mobile drawer with backdrop and close button for phone navigation.
 
 `GlobalToaster`
 
@@ -219,13 +224,14 @@ File: `src/pages/Reports.jsx`
 
 What it does:
 
-- Fetches report data from `GET /api/reports`.
+- Fetches report data from `GET /api/reports` with month filtering support.
 - Shows salary, total spent, remaining, and daily safe budget cards.
 - Shows the biggest spending category as “Biggest Leak”.
 - Displays a spending breakdown pie chart.
 - Shows category summaries with progress bars.
 - Shows weekly comparison: this week, last week, and trend.
 - Lists all expense records in a table.
+- Includes month selector and download dropdown for month-specific `CSV` and `PDF`.
 
 Chart:
 
@@ -360,10 +366,11 @@ Reports calculations:
 
 ## Current Development Notes
 
-- Frontend API calls are duplicated across pages and use hardcoded `http://localhost:5050`.
+- Frontend API calls are centralized with React Query hooks and a shared API utility.
+- API base URL is centralized and can be overridden with `VITE_API_BASE_URL`.
 - Frontend local finance utilities duplicate some backend logic and may be stale.
 - `useFinanceStore` appears mostly unused by current backend-backed pages.
-- There is no mobile sidebar/navigation yet.
+- Shared layout and page spacing are tuned for phone + desktop responsive behavior.
 - There are no automated tests currently visible in the project scripts.
 - Backend JWT requires `JWT_SECRET` in environment variables.
 - Backend database requires `DATABASE_URL` for PostgreSQL.

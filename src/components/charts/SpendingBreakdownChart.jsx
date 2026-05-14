@@ -6,7 +6,7 @@ import {
     Tooltip,
 } from "recharts";
 
-const COLORS = ["#10b981", "#3b82f6", "#f97316", "#ef4444", "#8b5cf6", "#14b8a6", "#64748b"];
+const COLORS = ["#334155", "#475569", "#64748b", "#94a3b8", "#0f766e", "#b45309", "#b91c1c"];
 
 export default function SpendingBreakdownChart({ expenses }) {
     const data = Object.values(
@@ -42,6 +42,7 @@ export default function SpendingBreakdownChart({ expenses }) {
                             outerRadius={90}
                             paddingAngle={3}
                             dataKey="value"
+                            isAnimationActive={false}
                         >
                             {data.map((_, index) => (
                                 <Cell key={index} fill={COLORS[index % COLORS.length]} />

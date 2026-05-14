@@ -1,5 +1,11 @@
 import prisma from "../config/db.js";
 
+const getMonthRange = (baseDate = new Date()) => {
+  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+  const end = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
+  return { start, end };
+};
+
 const getBehaviorMessage = (count) => {
   if (count === 0) {
     return {
@@ -126,8 +132,17 @@ export const getDashboard = async (req, res) => {
       where: { userId: req.user.id },
     });
 
+    const today = new Date();
+    const { start, end } = getMonthRange(today);
+
     const expenses = await prisma.expense.findMany({
-      where: { userId: req.user.id },
+      where: {
+        userId: req.user.id,
+        date: {
+          gte: start,
+          lt: end,
+        },
+      },
     });
 
     const salary = Number(profile?.salary || 0);
@@ -137,7 +152,6 @@ export const getDashboard = async (req, res) => {
     const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
     const remaining = salary - totalSpent;
 
-    const today = new Date();
     const daysPassed = today.getDate();
     const totalDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     const remainingDays = totalDays - daysPassed + 1;
